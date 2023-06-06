@@ -99,7 +99,6 @@ func NewSession() (*Session, error) {
 
 	reader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-
 		return nil, err
 	}
 	defer reader.Close()
@@ -149,7 +148,6 @@ func (s *Session) Check() error {
 
 	reader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-
 		return err
 	}
 	defer reader.Close()
