@@ -68,7 +68,7 @@ func NewSession() (*Session, error) {
 		DeviceID:        getDeviceID(),
 		UserAgent:       getUserAgent(),
 		BaseApiURI:      baseApiURI,
-		AskSeqNum:       421,
+		AskSeqNum:       1,
 		LastBackendUUID: "",
 		ReadWriteToken:  "",
 	}
@@ -258,10 +258,7 @@ func (s *Session) InitWss() error {
 			break
 		}
 
-		switch string(message) {
-		case "2":
-			conn.WriteMessage(websocket.TextMessage, []byte("3"))
-		case "3probe":
+		if string(message) == "3probe" {
 			conn.WriteMessage(websocket.TextMessage, []byte("5"))
 		}
 	}
@@ -312,9 +309,10 @@ func (s *Session) Ask(question string) error {
 		return err
 	}
 
-	params := []string{"perplexity_ask", question, string(marshalled)}
-
-	q := fmt.Sprintf("%d[%q,%q,%v]", code, params[0], params[1], params[2])
+	q := fmt.Sprintf(
+		"%d%d[%q,%q,%v]",
+		42, code, "perplexity_ask", question, string(marshalled),
+	)
 
 	err = s.Wss.WriteMessage(websocket.TextMessage, []byte(q))
 	if err != nil {
@@ -331,6 +329,11 @@ func (s *Session) ReadAnswer() (*AnswerDetails, error) {
 	}
 
 	if strings.HasPrefix(string(message), "42[\"query_progress\"") {
+		return s.ReadAnswer()
+	}
+
+	if string(message) == "2" {
+		s.Wss.WriteMessage(websocket.TextMessage, []byte("3"))
 		return s.ReadAnswer()
 	}
 
@@ -377,9 +380,6 @@ func getToken() string {
 func getDeviceID() string {
 	bytes := make([]byte, 8)
 	_, _ = rand.Read(bytes)
-
-	// Set the first byte to 0xdd
-	bytes[0] = 0xdd
 
 	// Encode the byte slice as a hexadecimal string
 	return hex.EncodeToString(bytes)
