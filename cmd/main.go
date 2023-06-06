@@ -23,12 +23,12 @@ func main() {
 	if err = s.InitWss(); err != nil {
 		panic(err)
 	}
+	defer s.Close()
 
 	msg := "write helloworld in golang"
 	if err = s.Ask(msg); err != nil {
 		panic(err)
 	}
-	defer s.Wss.Close()
 
 	answer, err := s.ReadAnswer()
 	if err != nil {

@@ -12,7 +12,9 @@ type AskRequest struct {
 	Version               string `json:"version"`
 	Token                 string `json:"token"`
 	FrontendUUID          string `json:"frontend_uuid"`
+	LastBackendUUID       string `json:"last_backend_uuid,omitempty"`
 	UseInhouseModel       bool   `json:"use_inhouse_model"`
+	ReadWriteToken        string `json:"read_write_token,omitempty"`
 	ConversationalEnabled bool   `json:"conversational_enabled"`
 	AndroidDeviceID       string `json:"android_device_id"`
 }
@@ -67,4 +69,10 @@ type QueryProgress struct {
 	Text           string `json:"text"`
 	Final          bool   `json:"final"`
 	BackendUUID    string `json:"backend_uuid"`
+}
+
+type CompleteResponse struct {
+	Status         string `json:"status,omitempty"`
+	UUID           string `json:"uuid,omitempty"`
+	ReadWriteToken string `json:"read_write_token,omitempty"`
 }

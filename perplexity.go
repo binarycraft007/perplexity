@@ -19,24 +19,32 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const AppVersion = "1.0.16"
-const ClientVersion = "1.0.16"
-const ApiVersion = "1.0"
-const AskVersion = "Ask/1.0.16/260016"
-const AndroidVersion = "13"
-const SdkVersion = "33"
-const DefaultUserAgent = AskVersion + " " + "(Android; Version 13;" +
-	" " + "Xiaomi M2011K2G/TQ1A.230205.002) SDK " + SdkVersion
+const (
+	AppVersion    = "1.0.16"
+	ClientVersion = "1.0.16"
+	ApiVersion    = "1.0"
+	AskVersion    = "Ask/1.0.16/260016"
+
+	// Android related info
+	AndroidVersion = 13
+	SdkVersion     = 33
+	VendorName     = "Xiaomi"
+	Model          = "M2011K2G"
+	BuildID        = "TQ1A.230205.002"
+)
 
 type Session struct {
-	Sid          string
-	Wss          *websocket.Conn
-	Client       *http.Client
-	FrontendUUID uuid.UUID
-	Token        string
-	DeviceID     string
-	UserAgent    string
-	BaseApiURI   *url.URL
+	Sid             string
+	Wss             *websocket.Conn
+	Client          *http.Client
+	FrontendUUID    uuid.UUID
+	Token           string
+	DeviceID        string
+	UserAgent       string
+	BaseApiURI      *url.URL
+	AskSeqNum       int
+	LastBackendUUID string
+	ReadWriteToken  string
 }
 
 func NewSession() (*Session, error) {
@@ -55,11 +63,14 @@ func NewSession() (*Session, error) {
 		Client: &http.Client{
 			Jar: jar,
 		},
-		FrontendUUID: uuid.New(),
-		Token:        getToken(),
-		DeviceID:     getDeviceID(),
-		UserAgent:    DefaultUserAgent,
-		BaseApiURI:   baseApiURI,
+		FrontendUUID:    uuid.New(),
+		Token:           getToken(),
+		DeviceID:        getDeviceID(),
+		UserAgent:       getUserAgent(),
+		BaseApiURI:      baseApiURI,
+		AskSeqNum:       421,
+		LastBackendUUID: "",
+		ReadWriteToken:  "",
 	}
 
 	params := url.Values{}
@@ -183,7 +194,6 @@ func (s *Session) GetSid() error {
 
 	reader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-
 		return err
 	}
 	defer reader.Close()
@@ -230,6 +240,7 @@ func (s *Session) InitWss() error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusSwitchingProtocols {
 		log.Println("Error switching protocols:", resp.StatusCode)
@@ -260,6 +271,11 @@ func (s *Session) InitWss() error {
 	return nil
 }
 
+func (s *Session) Close() {
+	s.Wss.WriteMessage(websocket.CloseMessage, []byte{})
+	s.Wss.Close()
+}
+
 func concatenateCookies(jar http.CookieJar) (*string, error) {
 	url, err := url.Parse("https://www.perplexity.ai")
 	if err != nil {
@@ -278,7 +294,8 @@ func concatenateCookies(jar http.CookieJar) (*string, error) {
 }
 
 func (s *Session) Ask(question string) error {
-	code := 421
+	code := s.AskSeqNum
+	defer func(s *Session) { s.AskSeqNum += 1 }(s)
 
 	askReq := AskRequest{
 		Source:                "android",
@@ -288,15 +305,20 @@ func (s *Session) Ask(question string) error {
 		UseInhouseModel:       false,
 		ConversationalEnabled: true,
 		AndroidDeviceID:       s.DeviceID,
+		LastBackendUUID:       s.LastBackendUUID,
+		ReadWriteToken:        s.ReadWriteToken,
 	}
 
-	marshalled, _ := json.Marshal(askReq)
+	marshalled, err := json.Marshal(askReq)
+	if err != nil {
+		return err
+	}
 
 	params := []string{"perplexity_ask", question, string(marshalled)}
 
 	q := fmt.Sprintf("%d[%q,%q,%v]", code, params[0], params[1], params[2])
 
-	err := s.Wss.WriteMessage(websocket.TextMessage, []byte(q))
+	err = s.Wss.WriteMessage(websocket.TextMessage, []byte(q))
 	if err != nil {
 		return err
 	}
@@ -318,19 +340,32 @@ func (s *Session) ReadAnswer() (*AnswerDetails, error) {
 		return nil, errors.New("No answer found")
 	}
 
-	respBytes := message[len("42[\"query_answered\",") : len(message)-1]
-
 	var result AskResponse
-	if err := json.Unmarshal(respBytes, &result); err != nil {
+	if err := parseMessage(message, &result); err != nil {
 		return nil, err
 	}
+	s.LastBackendUUID = result.BackendUUID
+	s.ReadWriteToken = result.ReadWriteToken
 
 	var answer AnswerDetails
 	if err := json.Unmarshal([]byte(result.Text), &answer); err != nil {
 		return nil, err
 	}
 
+	_, _, _ = s.Wss.ReadMessage()
+
 	return &answer, nil
+}
+
+func parseMessage(message []byte, v any) error {
+	start := strings.Index(string(message), ",") + 1
+	respBytes := message[start : len(message)-1]
+
+	if err := json.Unmarshal(respBytes, v); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getToken() string {
@@ -350,4 +385,16 @@ func getDeviceID() string {
 
 	// Encode the byte slice as a hexadecimal string
 	return hex.EncodeToString(bytes)
+}
+
+func getUserAgent() string {
+	return fmt.Sprintf(
+		"%s (Android; Version %d; %s %s/%s) SDK %d",
+		AskVersion,
+		AndroidVersion,
+		VendorName,
+		Model,
+		BuildID,
+		SdkVersion,
+	)
 }
