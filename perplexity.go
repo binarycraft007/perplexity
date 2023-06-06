@@ -19,6 +19,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const AppVersion = "1.0.16"
+const ClientVersion = "1.0.16"
+const ApiVersion = "1.0"
 const AskVersion = "Ask/1.0.16/260016"
 const AndroidVersion = "13"
 const SdkVersion = "33"
@@ -71,11 +74,11 @@ func NewSession() (*Session, error) {
 	req.Header.Add("accept", "*/*")
 	req.Header.Add("accept-encoding", "gzip")
 	req.Header.Add("user-agent", session.UserAgent)
-	req.Header.Add("x-app.version", "1.0.16")
-	req.Header.Add("x-client-version", "1.0.16")
+	req.Header.Add("x-app.version", AppVersion)
+	req.Header.Add("x-client-version", ClientVersion)
 	req.Header.Add("x-client-name", "Perplexity-Android")
 	req.Header.Add("x-app-apiclient", "android")
-	req.Header.Add("x-app-apiversion", "1.0")
+	req.Header.Add("x-app-apiversion", ApiVersion)
 
 	resp, err := session.Client.Do(req)
 	if err != nil {
@@ -121,11 +124,11 @@ func (s *Session) Check() error {
 	req.Header.Add("accept-encoding", "gzip")
 	req.Header.Add("content-type", "text/plain;charset=UTF-8")
 	req.Header.Add("user-agent", s.UserAgent)
-	req.Header.Add("x-app.version", "1.0.16")
-	req.Header.Add("x-client-version", "1.0.16")
+	req.Header.Add("x-app.version", AppVersion)
+	req.Header.Add("x-client-version", ClientVersion)
 	req.Header.Add("x-client-name", "Perplexity-Android")
 	req.Header.Add("x-app-apiclient", "android")
-	req.Header.Add("x-app-apiversion", "1.0")
+	req.Header.Add("x-app-apiversion", ApiVersion)
 
 	resp, err := s.Client.Do(req)
 	if err != nil {
@@ -166,11 +169,11 @@ func (s *Session) GetSid() error {
 	req.Header.Add("accept", "*/*")
 	req.Header.Add("accept-encoding", "gzip")
 	req.Header.Add("user-agent", s.UserAgent)
-	req.Header.Add("x-app.version", "1.0.16")
-	req.Header.Add("x-client-version", "1.0.16")
+	req.Header.Add("x-app.version", AppVersion)
+	req.Header.Add("x-client-version", ClientVersion)
 	req.Header.Add("x-client-name", "Perplexity-Android")
 	req.Header.Add("x-app-apiclient", "android")
-	req.Header.Add("x-app-apiversion", "1.0")
+	req.Header.Add("x-app-apiversion", ApiVersion)
 
 	resp, err := s.Client.Do(req)
 	if err != nil {
@@ -209,11 +212,11 @@ func (s *Session) InitWss() error {
 	header.Add("accept", "*/*")
 	header.Add("accept-encoding", "gzip")
 	header.Add("user-agent", s.UserAgent)
-	header.Add("x-app.version", "1.0.16")
-	header.Add("x-client-version", "1.0.16")
+	header.Add("x-app.version", AppVersion)
+	header.Add("x-client-version", ClientVersion)
 	header.Add("x-client-name", "Perplexity-Android")
 	header.Add("x-app-apiclient", "android")
-	header.Add("x-app-apiversion", "1.0")
+	header.Add("x-app-apiversion", ApiVersion)
 	header.Add("Cookie", *cookie)
 
 	params := url.Values{}
@@ -279,7 +282,7 @@ func (s *Session) Ask(question string) error {
 
 	askReq := AskRequest{
 		Source:                "android",
-		Version:               "1.0",
+		Version:               ApiVersion,
 		Token:                 s.Token,
 		FrontendUUID:          s.FrontendUUID.String(),
 		UseInhouseModel:       false,
