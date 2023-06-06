@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"perplexity"
+
+	"github.com/binarycraft007/perplexity"
 )
 
 func main() {
