@@ -33,18 +33,44 @@ const (
 	BuildID        = "TQ1A.230205.002"
 )
 
+type SearchFocus string
+
+const (
+	Internet     SearchFocus = "internet"
+	Writing      SearchFocus = "writing"
+	Academic     SearchFocus = "scholar"
+	WolframAlpha SearchFocus = "wolfram"
+	YouTube      SearchFocus = "youtube"
+	Reddit       SearchFocus = "reddit"
+)
+
+type SearchSource string
+
+const (
+	Android SearchSource = "android"
+	Default SearchSource = "default"
+)
+
+type SearchMode string
+
+const (
+	Concise SearchMode = "concise"
+	Copilot SearchMode = "copilot"
+)
+
 type Session struct {
-	Sid             string
-	Wss             *websocket.Conn
-	Client          *http.Client
-	FrontendUUID    uuid.UUID
-	Token           string
-	DeviceID        string
-	UserAgent       string
-	BaseApiURI      *url.URL
-	AskSeqNum       int
-	LastBackendUUID string
-	ReadWriteToken  string
+	Sid               string
+	Wss               *websocket.Conn
+	Client            *http.Client
+	FrontendUUID      uuid.UUID
+	FrontendSessionID uuid.UUID
+	Token             string
+	DeviceID          string
+	UserAgent         string
+	BaseApiURI        *url.URL
+	AskSeqNum         int
+	LastBackendUUID   string
+	ReadWriteToken    string
 }
 
 func NewSession() (*Session, error) {
@@ -63,14 +89,13 @@ func NewSession() (*Session, error) {
 		Client: &http.Client{
 			Jar: jar,
 		},
-		FrontendUUID:    uuid.New(),
-		Token:           getToken(),
-		DeviceID:        getDeviceID(),
-		UserAgent:       getUserAgent(),
-		BaseApiURI:      baseApiURI,
-		AskSeqNum:       1,
-		LastBackendUUID: "",
-		ReadWriteToken:  "",
+		FrontendUUID:      uuid.New(),
+		FrontendSessionID: uuid.New(),
+		Token:             getToken(),
+		DeviceID:          getDeviceID(),
+		UserAgent:         getUserAgent(),
+		BaseApiURI:        baseApiURI,
+		AskSeqNum:         1,
 	}
 
 	params := url.Values{}
@@ -217,14 +242,6 @@ func (s *Session) InitWss() error {
 		return err
 	}
 	header := http.Header{}
-	header.Add("accept", "*/*")
-	header.Add("accept-encoding", "gzip")
-	header.Add("user-agent", s.UserAgent)
-	header.Add("x-app.version", AppVersion)
-	header.Add("x-client-version", ClientVersion)
-	header.Add("x-client-name", "Perplexity-Android")
-	header.Add("x-app-apiclient", "android")
-	header.Add("x-app-apiversion", ApiVersion)
 	header.Add("Cookie", *cookie)
 
 	params := url.Values{}
@@ -293,15 +310,18 @@ func (s *Session) Ask(question string) error {
 	defer func(s *Session) { s.AskSeqNum += 1 }(s)
 
 	askReq := AskRequest{
-		Source:                "android",
-		Version:               ApiVersion,
+		Source:                Default,
 		Token:                 s.Token,
 		FrontendUUID:          s.FrontendUUID.String(),
-		UseInhouseModel:       false,
 		ConversationalEnabled: true,
-		AndroidDeviceID:       s.DeviceID,
+		Language:              "en-US",
+		Timezone:              "Asia/Shanghai",
 		LastBackendUUID:       s.LastBackendUUID,
+		FrontendSessionID:     s.FrontendSessionID.String(),
 		ReadWriteToken:        s.ReadWriteToken,
+		SearchFocus:           Writing,
+		Gpt4:                  false,
+		Mode:                  Concise,
 	}
 
 	marshalled, err := json.Marshal(askReq)

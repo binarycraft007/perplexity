@@ -8,15 +8,21 @@ type GetSidResponse struct {
 }
 
 type AskRequest struct {
-	Source                string `json:"source"`
-	Version               string `json:"version"`
-	Token                 string `json:"token"`
-	FrontendUUID          string `json:"frontend_uuid"`
-	LastBackendUUID       string `json:"last_backend_uuid,omitempty"`
-	UseInhouseModel       bool   `json:"use_inhouse_model"`
-	ReadWriteToken        string `json:"read_write_token,omitempty"`
-	ConversationalEnabled bool   `json:"conversational_enabled"`
-	AndroidDeviceID       string `json:"android_device_id"`
+	Source                SearchSource `json:"source"`
+	Version               string       `json:"version,omitempty"`
+	Token                 string       `json:"token"`
+	FrontendUUID          string       `json:"frontend_uuid"`
+	FrontendSessionID     string       `json:"frontend_session_id,omitempty"`
+	LastBackendUUID       string       `json:"last_backend_uuid,omitempty"`
+	UseInhouseModel       bool         `json:"use_inhouse_model,omitempty"`
+	ReadWriteToken        string       `json:"read_write_token,omitempty"`
+	ConversationalEnabled bool         `json:"conversational_enabled"`
+	AndroidDeviceID       string       `json:"android_device_id,omitempty"`
+	Language              string       `json:"language,omitempty"`
+	Timezone              string       `json:"timezone,omitempty"`
+	SearchFocus           SearchFocus  `json:"search_focus,omitempty"`
+	Gpt4                  bool         `json:"gpt4,omitempty"`
+	Mode                  SearchMode   `json:"mode,omitempty"`
 }
 
 type AskResponse struct {
