@@ -20,10 +20,10 @@ import (
 )
 
 const (
-	AppVersion    = "1.0.16"
-	ClientVersion = "1.0.16"
+	AppVersion    = "1.0.23"
+	ClientVersion = "1.0.23"
 	ApiVersion    = "1.0"
-	AskVersion    = "Ask/1.0.16/260016"
+	AskVersion    = "Ask/1.0.23/260023"
 
 	// Android related info
 	AndroidVersion = 13
