@@ -26,23 +26,24 @@ type AskRequest struct {
 }
 
 type AskResponse struct {
-	Status             string   `json:"status"`
-	UUID               string   `json:"uuid"`
-	ReadWriteToken     string   `json:"read_write_token"`
-	Mode               string   `json:"mode"`
-	Label              string   `json:"label"`
-	SearchFocus        string   `json:"search_focus"`
-	StepType           string   `json:"step_type"`
-	RelatedQueries     []string `json:"related_queries"`
-	Gpt4               bool     `json:"gpt4"`
-	BackendUUID        string   `json:"backend_uuid"`
-	QueryStr           string   `json:"query_str"`
-	Text               string   `json:"text"`
-	ContextUUID        string   `json:"context_uuid"`
-	ThreadTitle        string   `json:"thread_title"`
-	AuthorUsername     any      `json:"author_username"`
-	AuthorImage        any      `json:"author_image"`
-	S3SocialPreviewURL string   `json:"s3_social_preview_url"`
+	Status             string `json:"status"`
+	UUID               string `json:"uuid"`
+	ReadWriteToken     string `json:"read_write_token"`
+	QueryStr           string `json:"query_str"`
+	StepType           string `json:"step_type"`
+	RelatedQueries     []any  `json:"related_queries"`
+	Text               string `json:"text"`
+	Personalized       bool   `json:"personalized"`
+	Mode               string `json:"mode"`
+	Gpt4               bool   `json:"gpt4"`
+	BackendUUID        string `json:"backend_uuid"`
+	SearchFocus        string `json:"search_focus"`
+	Label              string `json:"label"`
+	ContextUUID        string `json:"context_uuid"`
+	ThreadTitle        string `json:"thread_title"`
+	AuthorUsername     any    `json:"author_username"`
+	AuthorImage        any    `json:"author_image"`
+	S3SocialPreviewURL string `json:"s3_social_preview_url"`
 }
 
 type AnswerDetails struct {

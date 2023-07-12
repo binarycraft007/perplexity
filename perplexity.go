@@ -322,6 +322,7 @@ func (s *Session) Ask(question string) error {
 		SearchFocus:           Writing,
 		Gpt4:                  false,
 		Mode:                  Concise,
+		Version:               "2.0",
 	}
 
 	marshalled, err := json.Marshal(askReq)
@@ -348,16 +349,12 @@ func (s *Session) ReadAnswer() (*AnswerDetails, error) {
 		return nil, err
 	}
 
-	if strings.HasPrefix(string(message), "42[\"query_progress\"") {
-		return s.ReadAnswer()
-	}
-
 	if string(message) == "2" {
 		s.Wss.WriteMessage(websocket.TextMessage, []byte("3"))
 		return s.ReadAnswer()
 	}
 
-	if !strings.HasPrefix(string(message), "42[\"query_answered\"") {
+	if !strings.Contains(string(message), "[{\"status\":\"completed\"") {
 		return nil, errors.New("No answer found")
 	}
 
@@ -379,7 +376,7 @@ func (s *Session) ReadAnswer() (*AnswerDetails, error) {
 }
 
 func parseMessage(message []byte, v any) error {
-	start := strings.Index(string(message), ",") + 1
+	start := strings.Index(string(message), "[") + 1
 	respBytes := message[start : len(message)-1]
 
 	if err := json.Unmarshal(respBytes, v); err != nil {
